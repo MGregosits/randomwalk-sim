@@ -291,7 +291,7 @@ def heatmap_quantum_2d(data_final: pd.DataFrame) -> str:
     return image_base64
 
 
-def generate_heatmaps_base64(data_frames: list) -> list:
+def generate_heatmaps_base64(data_frames: list, number_qubits: int) -> list:
     """
     Generates a list of heatmaps from data frames, returning each image in base64 encoding.
 
@@ -305,13 +305,19 @@ def generate_heatmaps_base64(data_frames: list) -> list:
 
     for data_final in data_frames:
         # Create a heatmap for each data frame and encode it in base64
-        heatmap_data = data_final.pivot(index="Y Coordinate", columns="X Coordinate", values="Occurrences")
+        grid_size = 2**number_qubits
+        heatmap_data = np.zeros((grid_size, grid_size))
+
+        for _, row in data_final.iterrows():
+            x = row['X Coordinate']
+            y = row['Y Coordinate']
+            heatmap_data[y, x] = row['Occurrences']
+        
         plt.figure(figsize=(12, 12))
         sns.heatmap(heatmap_data, annot=True, cmap="YlGnBu", fmt=".0f", cbar=True)
         plt.title("Heatmap of Occurrences")
         plt.xlabel("X Coordinates")
         plt.ylabel("Y Coordinates")
-        plt.ylim(0, int(heatmap_data.index.max()) + 1)
 
         # Save the plot to an in-memory buffer
         buffer = io.BytesIO()
@@ -327,7 +333,7 @@ def generate_heatmaps_base64(data_frames: list) -> list:
     return base64_images
 
 
-def create_base64_gif_from_heatmaps(data_frames: list, duration=0.5) -> str:
+def create_base64_gif_from_heatmaps(data_frames: list, number_qubits: int, duration=0.5) -> str:
     """
     Creates an animated GIF from a list of data frames representing heatmaps and returns it in base64 format.
 
@@ -339,7 +345,7 @@ def create_base64_gif_from_heatmaps(data_frames: list, duration=0.5) -> str:
         str: A base64-encoded string representing the animated GIF.
     """
     # Generate the heatmap images in base64 format
-    images = generate_heatmaps_base64(data_frames)
+    images = generate_heatmaps_base64(data_frames, number_qubits)
     image_objects = [imageio.imread(io.BytesIO(base64.b64decode(img))) for img in images]
 
     # Create the animated GIF and save it to an in-memory buffer

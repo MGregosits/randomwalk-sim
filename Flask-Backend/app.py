@@ -73,5 +73,34 @@ def quantum():
     return result
 
 
+@app.route('/quantum_2d', methods=['POST'])
+def quantum():
+    data = request.get_json()
+    number_qubits = data.get('number_qubits')
+    iterator = data.get('iterator')
+    sample_number = data.get('sample_number')
+
+    final, state_vector = run_2d_walk(number_qubits, iterator, sample_number)
+
+    data_final = convert_2d_results_to_coordinates(final, number_qubits, sample_number)
+
+    barplot_base64 = bar_quantum_2d(data_final)
+
+    heatmap_base64 = heatmap_quantum_2d(data_final)
+
+    list_for_gif_heatmap = []
+
+    for i in range(1, (2**number_qubits) + 1):
+        f_iter, sv_iter = run_2d_walk(number_qubits, i, sample_number)
+        df_iter = convert_2d_results_to_coordinates(f_iter, number_qubits, sample_number)
+        list_for_gif_heatmap.append(df_iter)
+
+    heatmap_gif_base64 = create_base64_gif_from_heatmaps(list_for_gif_heatmap, number_qubits)
+
+    # Convert the x and y arrays to lists and return as a JSON object
+    result = {'bar_plot_q_2d': barplot_base64, 'heatmap_q_2d': heatmap_base64, 'heatmap_q_2d_gif': heatmap_gif_base64}
+    return result
+
+
 if __name__ == '__main__':
     app.run(debug=True)
