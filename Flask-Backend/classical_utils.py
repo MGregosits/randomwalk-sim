@@ -214,7 +214,7 @@ def assign_mixing_time(mc: dtmc.MarkovChain, initial_dist: np.ndarray) -> str:
     return mixing_time
 
 
-def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int]) -> pd.DataFrame:
+def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int], only_final_steps: bool = False) -> pd.DataFrame:
     """
     This function analyzes the walk data and creates a DataFrame containing unique states, their occurrences, and probabilities.
 
@@ -225,14 +225,11 @@ def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int]) ->
     Returns:
         pandas.DataFrame: A DataFrame containing unique states, their occurrences, and probabilities.
     """
-    total_steps = sum(len(walk) for walk in all_walks)  # Total number of steps in all simulations
+    selected_steps = [walk[-1] for walk in all_walks] if only_final_steps else [state for walk in all_walks for state in walk]
+    total_steps = len(selected_steps)  # Total number of steps in all simulations
     state_counts = {}
-    for walk in all_walks:
-        for state in walk:
-            if state in state_counts:
-                state_counts[state] += 1
-            else:
-                state_counts[state] = 1
+    for state in selected_steps:
+        state_counts[state] = state_counts.get(state, 0) + 1
     state_data = [
             {"State": state, "Occurrences": count, "Probability": count / total_steps}
             for state, count in state_counts.items()
