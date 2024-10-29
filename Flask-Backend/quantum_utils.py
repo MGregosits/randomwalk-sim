@@ -350,7 +350,7 @@ def create_base64_gif_from_heatmaps(data_frames: list, number_qubits: int, durat
 
     # Create the animated GIF and save it to an in-memory buffer
     gif_buffer = io.BytesIO()
-    imageio.mimsave(gif_buffer, image_objects, format='GIF', duration=duration)
+    imageio.mimsave(gif_buffer, image_objects, format='GIF', duration=duration, loop=0)
     gif_buffer.seek(0)
 
     # Encode the GIF data in base64
