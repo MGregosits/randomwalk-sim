@@ -3,6 +3,7 @@ import NavBar from './components/NavBar';
 import './index.css';
 import ClassicalPage from './components/ClassicalPage';
 import QuantumPage from './components/QuantumPage';
+import Quantum2DPage from './components/Quantum2DPage';
 
 function App() {
     let component;
@@ -13,6 +14,8 @@ function App() {
         case '/quantum':
             component = <QuantumPage />;
             break;
+        case '/quantum_2d':
+            component = <Quantum2DPage />;
     }
 
     return (

@@ -7,6 +7,7 @@ function NavBar() {
         <ul>
             <CustomLink href="/">Classical Simulation</CustomLink>
             <CustomLink href="/quantum">Quantum Simulation</CustomLink>
+            <CustomLink href="/quantum_2d">Quantum 2D Simulation</CustomLink>
         </ul>
     </nav>
 }
