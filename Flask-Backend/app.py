@@ -74,7 +74,7 @@ def quantum():
 
 
 @app.route('/quantum_2d', methods=['POST'])
-def quantum():
+def quantum_2d():
     data = request.get_json()
     number_qubits = data.get('number_qubits')
     iterator = data.get('iterator')
