@@ -43,7 +43,7 @@ def multiple_runs():
     all_walks, hitting_times = simulate_multiple_walks(mc, n, n_sims, target_state, grid_size, states, False)
 
     # Analyze walk data
-    df_state_analysis = analyze_walk_data(all_walks, grid_size)
+    df_state_analysis = analyze_walk_data(all_walks, grid_size, only_final_steps=True)
 
     # Create a plots of occurrences
     bar_plot_base64 = bar_plot_occurrences(df_state_analysis)

@@ -238,6 +238,8 @@ def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int], on
     df_state_analysis['State'] = pd.to_numeric(df_state_analysis['State'])
     df_state_analysis = df_state_analysis.sort_values(by='State').reset_index(drop=True)
     df_state_analysis['Coordinates'] = df_state_analysis['State'].apply(lambda x: get_target_coordinate(x, grid_size))
+    df_state_analysis[["X", "Y"]] = df_state_analysis["Coordinates"].str.split(", ", expand=True).astype(int)
+    df_state_analysis = df_state_analysis.sort_values(by=['X', 'Y'], ascending=[True, True])
     return df_state_analysis
 
 
@@ -296,8 +298,6 @@ def heatmap_occurrences(data_final: pd.DataFrame) -> str:
     Returns:
         str: Path to the saved heatmap image.
     """
-    # Extract X and Y coordinates from the "Coordinates" column
-    data_final[["X", "Y"]] = data_final["Coordinates"].str.split(", ", expand=True)
 
     # Pivot the DataFrame to create a heatmap
     heatmap_data = data_final.pivot(index="Y", columns="X", values="Occurrences")
