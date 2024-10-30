@@ -113,7 +113,7 @@ def walk_step_by_step(
   Returns:
       An array with the states visited by the walk in order and the hitting time of the target state.
     """
-    walk = [generate_random_int(states[0], states[-1])]
+    walk = ['0']
     hitting_time = None
     target_index = get_target_index(target_state, grid_size)
     for i in range(0, n):
@@ -308,7 +308,7 @@ def heatmap_occurrences(data_final: pd.DataFrame) -> str:
     plt.title("Heatmap of Occurrences")
     plt.xlabel("X Coordinates")
     plt.ylabel("Y Coordinates")
-    plt.ylim(0, int(heatmap_data.index.max()) + 1)
+    plt.gca().invert_yaxis()
     # Save the plot as an in-memory buffer
     buffer = io.BytesIO()
     plt.savefig(buffer, format='png')
