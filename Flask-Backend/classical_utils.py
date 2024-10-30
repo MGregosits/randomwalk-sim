@@ -1,5 +1,6 @@
 import base64
 import io
+import imageio
 import time
 from typing import List, Optional, Tuple, Union
 import numpy as np

@@ -90,7 +90,7 @@ def quantum_2d():
 
     list_for_gif_heatmap = []
 
-    for i in range(1, (2**number_qubits) + 1):
+    for i in range(1, iterator + 1):
         f_iter, sv_iter = run_2d_walk(number_qubits, i, sample_number)
         df_iter = convert_2d_results_to_coordinates(f_iter, number_qubits, sample_number)
         list_for_gif_heatmap.append(df_iter)
