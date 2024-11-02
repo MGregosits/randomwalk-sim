@@ -1,12 +1,31 @@
 from flask import Flask, request
 from flask_cors import CORS
-
 from classical_utils import *
 from quantum_utils import *
 
 app = Flask(__name__)
 CORS(app)
 
+@app.route('/classical_1d', methods=['POST'])
+def classical_1d():
+    data = request.get_json()
+    n = data.get('n')
+    n_states = data.get('n_states')
+    n_sims = data.get('n_sims')
+
+    trans = circular_1d_transition_matrix(n_states)
+    states = [str(i) for i in range(n_states)]
+    mc = dtmc.MarkovChain(trans, states)
+
+    all_walks = simulate_multiple_walks_1d(mc, n, n_sims, n_states, states)
+
+    df_state_analysis = analyze_walk_data_1d(all_walks, n_states, only_final_steps=True)
+
+    bar_plot_1d_base64 = bar_plot_1d(df_state_analysis)
+    heatmap_1d_base64 = heatmap_1d(df_state_analysis)
+
+    result = {"bar_plot_1d": bar_plot_1d_base64, "heat_map_1d": heatmap_1d_base64}
+    return result
 
 @app.route('/process', methods=['POST'])
 def process():

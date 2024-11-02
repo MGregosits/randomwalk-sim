@@ -5,6 +5,7 @@ function NavBar() {
     return <nav className="nav">
         <h1 className="site-title">Random Walk Simulation</h1>
         <ul>
+            <CustomLink href="/classical_1d">Classical 1D Simulation</CustomLink>
             <CustomLink href="/">Classical Simulation</CustomLink>
             <CustomLink href="/quantum">Quantum Simulation</CustomLink>
             <CustomLink href="/quantum_2d">Quantum 2D Simulation</CustomLink>

@@ -8,6 +8,7 @@ import pandas as pd
 import pydtmc as dtmc
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import kde
 plt.switch_backend('agg')
 
 
@@ -68,6 +69,27 @@ def torus_transition_matrix(grid_size: tuple) -> np.ndarray:
   return P
 
 
+def circular_1d_transition_matrix(num_states: int) -> np.ndarray:
+    """
+    This function creates a transition matrix for a 1D random walk on a circle.
+
+    Args:
+        num_states: The number of states in the circular random walk.
+
+    Returns:
+        A numpy array representing the transition matrix.
+    """
+
+    P = np.zeros((num_states, num_states))
+
+    for i in range(num_states):
+        # Set the probability of moving left and right with wrapping
+        P[i][(i - 1) % num_states] = 0.5  # Move left with wrapping
+        P[i][(i + 1) % num_states] = 0.5  # Move right with wrapping
+
+    return P
+
+
 def initialize_processing(grid_size: Tuple[int, int]) -> Tuple[List[str], np.ndarray, dtmc.MarkovChain]:
     trans = torus_transition_matrix(grid_size)
     states = [str(i) for i in range(grid_size[0] * grid_size[1])]
@@ -90,7 +112,19 @@ def convert_states_to_coordinates(walk: List[str], grid_size: Tuple[int, int]):
     x_coords, y_coords = zip(*[map(int, get_target_coordinate(int(state), grid_size).split(", ")) for state in walk])
     return list(x_coords), list(y_coords)
     
+def walk_step_by_step_1d(
+    mc: dtmc.MarkovChain,
+    n: int,
+    n_states: int,
+    states: List[str]
+) -> List[str]:
 
+    walk = ['0']
+    for i in range(0, n):
+        current_state = walk[-1]
+        next_state = mc.next(current_state)
+        walk.append(next_state)
+    return walk
 
 def walk_step_by_step(
     mc: dtmc.MarkovChain,
@@ -126,6 +160,22 @@ def walk_step_by_step(
         next_state = mc.next(current_state)
         walk.append(next_state)
     return walk, hitting_time
+
+
+def simulate_multiple_walks_1d(
+    mc: dtmc.MarkovChain,
+    n: int,
+    n_sims: int,
+    n_states: int,
+    states: List[str],
+) -> List[List[str]]:
+
+    all_walks = []
+    
+    for _ in range(n_sims):
+        walk = walk_step_by_step_1d(mc,n, n_states, states)
+        all_walks.append(walk)
+    return all_walks
 
 
 def simulate_multiple_walks(
@@ -215,6 +265,32 @@ def assign_mixing_time(mc: dtmc.MarkovChain, initial_dist: np.ndarray) -> str:
     return mixing_time
 
 
+def analyze_walk_data_1d(all_walks: List[List[int]], n_states: int, only_final_steps: bool = False) -> pd.DataFrame:
+    """
+    This function analyzes the walk data and creates a DataFrame containing unique states, their occurrences, and probabilities.
+
+    Args:
+        all_walks (list): A list of lists, where each inner list represents the states visited in a single simulation.
+        n_sims (int): The number of simulations run.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing unique states, their occurrences, and probabilities.
+    """
+    selected_steps = [walk[-1] for walk in all_walks] if only_final_steps else [state for walk in all_walks for state in walk]
+    total_steps = len(selected_steps)  # Total number of steps in all simulations
+    state_counts = {}
+    for state in selected_steps:
+        state_counts[state] = state_counts.get(state, 0) + 1
+    state_data = [
+            {"State": state, "Occurrences": count, "Probability": count / total_steps}
+            for state, count in state_counts.items()
+        ]
+    df_state_analysis = pd.DataFrame(state_data)
+    df_state_analysis['State'] = pd.to_numeric(df_state_analysis['State'])
+    df_state_analysis = df_state_analysis.sort_values(by='State').reset_index(drop=True)
+    return df_state_analysis
+
+
 def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int], only_final_steps: bool = False) -> pd.DataFrame:
     """
     This function analyzes the walk data and creates a DataFrame containing unique states, their occurrences, and probabilities.
@@ -265,6 +341,30 @@ def compute_theoretical_distribution(states: List[str], transition_matrix: np.nd
     return distribution_df
 
 
+def bar_plot_1d(data_final: pd.DataFrame) -> str:
+    """
+    Creates a bar plot of occurrences and saves it as a PNG file.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing data for the bar plot.
+
+    Returns:
+        Literal["static/bar_plot.png"]: Path to the saved PNG file.
+    """
+    fig, ax = plt.subplots(figsize=(20,10))
+    sns.barplot(data=data_final, x='State', y='Occurrences', ax=ax)
+    ax.bar_label(ax.containers[0], fontsize=1)
+    ax.set_title("Count of steps on each node")
+    # Save the plot as an in-memory buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    # Encode the image data in base64
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    return image_base64
+
+
 def bar_plot_occurrences(data_final: pd.DataFrame) -> str:
     """
     Creates a bar plot of occurrences and saves it as a PNG file.
@@ -284,6 +384,32 @@ def bar_plot_occurrences(data_final: pd.DataFrame) -> str:
     plt.savefig(buffer, format='png')
     buffer.seek(0)
     # Encode the image data in base64
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    return image_base64
+
+
+def heatmap_1d(data_final: pd.DataFrame) -> str:
+    """
+    Creates a heatmap of occurrences based on coordinates and saves it as a PNG file.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing data for the heatmap.
+
+    Returns:
+        str: Path to the saved heatmap image.
+    """
+
+    ig, ax = plt.subplots(figsize=(20,10))
+    nbins=256
+    k = kde.gaussian_kde([data_final['State'],data_final['Occurrences']])
+    xi, yi = np.mgrid[data_final['State'].min():data_final['State'].max():nbins*1j, data_final['Occurrences'].min():data_final['Occurrences'].max():nbins*1j]
+    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+    plt.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='auto')
+    ax.set_title("Heatmap of the random walk")
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
     image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
     plt.close()
     return image_base64
