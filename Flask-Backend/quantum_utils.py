@@ -202,6 +202,17 @@ def run_2d_walk(n, steps, sample_number):
     
 
 def convert_2d_results_to_coordinates(final, n, sample_number):
+    """
+    Converts the final results into x and y coordinates along with their occurrences and probabilities.
+
+    Args:
+        final (dict): Dictionary with state as keys and counts as values.
+        n (int): Number of qubits per coordinate.
+        sample_number (int): Total number of samples to calculate probabilities.
+
+    Returns:
+        pd.DataFrame: DataFrame with X Coordinate, Y Coordinate, Occurrences, Probabilities, and combined Coordinates.
+    """
     x_coords = []
     y_coords = []
     occurrences = []
@@ -259,6 +270,47 @@ def bar_quantum_2d(data_final: pd.DataFrame) -> str:
     return image_base64
     #plt.show()
 
+
+def combined_bar_plot_quantum_2d(data_final: pd.DataFrame) -> str:
+    """
+    Creates a combined bar plot showing occurrences of each x and y coordinate in a single figure.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing X Coordinate, Y Coordinate, and Occurrences.
+
+    Returns:
+        str: Base64-encoded image of the combined plot.
+    """
+    # Aggregate occurrences by X and Y coordinates
+    x_occurrences = data_final.groupby('X Coordinate')['Occurrences'].sum().reset_index()
+    y_occurrences = data_final.groupby('Y Coordinate')['Occurrences'].sum().reset_index()
+
+    # Create a single figure with two subplots side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    
+    # Plot for X coordinates
+    sns.barplot(data=x_occurrences, x='X Coordinate', y='Occurrences', ax=ax1)
+    ax1.bar_label(ax1.containers[0], fontsize=8)
+    ax1.set_title("Occurrences by X Coordinate")
+    ax1.set_xlabel("X Coordinate")
+    ax1.set_ylabel("Occurrences")
+    
+    # Plot for Y coordinates
+    sns.barplot(data=y_occurrences, x='Y Coordinate', y='Occurrences', ax=ax2)
+    ax2.bar_label(ax2.containers[0], fontsize=8)
+    ax2.set_title("Occurrences by Y Coordinate")
+    ax2.set_xlabel("Y Coordinate")
+    ax2.set_ylabel("Occurrences")
+    
+    # Save the combined plot as an in-memory buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    
+    return image_base64
+
 def heatmap_quantum_2d(data_final: pd.DataFrame) -> str:
     """
     Creates a heatmap of occurrences based on coordinates and saves it as a PNG file.
@@ -291,7 +343,7 @@ def heatmap_quantum_2d(data_final: pd.DataFrame) -> str:
     return image_base64
 
 
-def generate_heatmaps_base64(data_frames: list) -> list:
+def generate_heatmaps_base64(data_frames: list, number_qubits: int) -> list:
     """
     Generates a list of heatmaps from data frames, returning each image in base64 encoding.
 
@@ -305,13 +357,19 @@ def generate_heatmaps_base64(data_frames: list) -> list:
 
     for data_final in data_frames:
         # Create a heatmap for each data frame and encode it in base64
-        heatmap_data = data_final.pivot(index="Y Coordinate", columns="X Coordinate", values="Occurrences")
+        grid_size = 2**number_qubits
+        heatmap_data = np.zeros((grid_size, grid_size))
+
+        for _, row in data_final.iterrows():
+            x = row['X Coordinate']
+            y = row['Y Coordinate']
+            heatmap_data[y, x] = row['Occurrences']
+        
         plt.figure(figsize=(12, 12))
         sns.heatmap(heatmap_data, annot=True, cmap="YlGnBu", fmt=".0f", cbar=True)
         plt.title("Heatmap of Occurrences")
         plt.xlabel("X Coordinates")
         plt.ylabel("Y Coordinates")
-        plt.ylim(0, int(heatmap_data.index.max()) + 1)
 
         # Save the plot to an in-memory buffer
         buffer = io.BytesIO()
@@ -327,7 +385,7 @@ def generate_heatmaps_base64(data_frames: list) -> list:
     return base64_images
 
 
-def create_base64_gif_from_heatmaps(data_frames: list, duration=0.5) -> str:
+def create_base64_gif_from_heatmaps(data_frames: list, number_qubits: int, duration=0.5) -> str:
     """
     Creates an animated GIF from a list of data frames representing heatmaps and returns it in base64 format.
 
@@ -339,12 +397,12 @@ def create_base64_gif_from_heatmaps(data_frames: list, duration=0.5) -> str:
         str: A base64-encoded string representing the animated GIF.
     """
     # Generate the heatmap images in base64 format
-    images = generate_heatmaps_base64(data_frames)
+    images = generate_heatmaps_base64(data_frames, number_qubits)
     image_objects = [imageio.imread(io.BytesIO(base64.b64decode(img))) for img in images]
 
     # Create the animated GIF and save it to an in-memory buffer
     gif_buffer = io.BytesIO()
-    imageio.mimsave(gif_buffer, image_objects, format='GIF', duration=duration)
+    imageio.mimsave(gif_buffer, image_objects, format='GIF', duration=duration, loop=0)
     gif_buffer.seek(0)
 
     # Encode the GIF data in base64

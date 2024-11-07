@@ -1,5 +1,6 @@
 import base64
 import io
+import imageio
 import time
 from typing import List, Optional, Tuple, Union
 import numpy as np
@@ -7,6 +8,7 @@ import pandas as pd
 import pydtmc as dtmc
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import kde
 plt.switch_backend('agg')
 
 
@@ -67,6 +69,27 @@ def torus_transition_matrix(grid_size: tuple) -> np.ndarray:
   return P
 
 
+def circular_1d_transition_matrix(num_states: int) -> np.ndarray:
+    """
+    This function creates a transition matrix for a 1D random walk on a circle.
+
+    Args:
+        num_states: The number of states in the circular random walk.
+
+    Returns:
+        A numpy array representing the transition matrix.
+    """
+
+    P = np.zeros((num_states, num_states))
+
+    for i in range(num_states):
+        # Set the probability of moving left and right with wrapping
+        P[i][(i - 1) % num_states] = 0.5  # Move left with wrapping
+        P[i][(i + 1) % num_states] = 0.5  # Move right with wrapping
+
+    return P
+
+
 def initialize_processing(grid_size: Tuple[int, int]) -> Tuple[List[str], np.ndarray, dtmc.MarkovChain]:
     trans = torus_transition_matrix(grid_size)
     states = [str(i) for i in range(grid_size[0] * grid_size[1])]
@@ -89,7 +112,19 @@ def convert_states_to_coordinates(walk: List[str], grid_size: Tuple[int, int]):
     x_coords, y_coords = zip(*[map(int, get_target_coordinate(int(state), grid_size).split(", ")) for state in walk])
     return list(x_coords), list(y_coords)
     
+def walk_step_by_step_1d(
+    mc: dtmc.MarkovChain,
+    n: int,
+    n_states: int,
+    states: List[str]
+) -> List[str]:
 
+    walk = ['0']
+    for i in range(0, n):
+        current_state = walk[-1]
+        next_state = mc.next(current_state)
+        walk.append(next_state)
+    return walk
 
 def walk_step_by_step(
     mc: dtmc.MarkovChain,
@@ -113,7 +148,7 @@ def walk_step_by_step(
   Returns:
       An array with the states visited by the walk in order and the hitting time of the target state.
     """
-    walk = [generate_random_int(states[0], states[-1])]
+    walk = ['0']
     hitting_time = None
     target_index = get_target_index(target_state, grid_size)
     for i in range(0, n):
@@ -125,6 +160,22 @@ def walk_step_by_step(
         next_state = mc.next(current_state)
         walk.append(next_state)
     return walk, hitting_time
+
+
+def simulate_multiple_walks_1d(
+    mc: dtmc.MarkovChain,
+    n: int,
+    n_sims: int,
+    n_states: int,
+    states: List[str],
+) -> List[List[str]]:
+
+    all_walks = []
+    
+    for _ in range(n_sims):
+        walk = walk_step_by_step_1d(mc,n, n_states, states)
+        all_walks.append(walk)
+    return all_walks
 
 
 def simulate_multiple_walks(
@@ -214,7 +265,7 @@ def assign_mixing_time(mc: dtmc.MarkovChain, initial_dist: np.ndarray) -> str:
     return mixing_time
 
 
-def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int]) -> pd.DataFrame:
+def analyze_walk_data_1d(all_walks: List[List[int]], n_states: int, only_final_steps: bool = False) -> pd.DataFrame:
     """
     This function analyzes the walk data and creates a DataFrame containing unique states, their occurrences, and probabilities.
 
@@ -225,14 +276,37 @@ def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int]) ->
     Returns:
         pandas.DataFrame: A DataFrame containing unique states, their occurrences, and probabilities.
     """
-    total_steps = sum(len(walk) for walk in all_walks)  # Total number of steps in all simulations
+    selected_steps = [walk[-1] for walk in all_walks] if only_final_steps else [state for walk in all_walks for state in walk]
+    total_steps = len(selected_steps)  # Total number of steps in all simulations
     state_counts = {}
-    for walk in all_walks:
-        for state in walk:
-            if state in state_counts:
-                state_counts[state] += 1
-            else:
-                state_counts[state] = 1
+    for state in selected_steps:
+        state_counts[state] = state_counts.get(state, 0) + 1
+    state_data = [
+            {"State": state, "Occurrences": count, "Probability": count / total_steps}
+            for state, count in state_counts.items()
+        ]
+    df_state_analysis = pd.DataFrame(state_data)
+    df_state_analysis['State'] = pd.to_numeric(df_state_analysis['State'])
+    df_state_analysis = df_state_analysis.sort_values(by='State').reset_index(drop=True)
+    return df_state_analysis
+
+
+def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int], only_final_steps: bool = False) -> pd.DataFrame:
+    """
+    This function analyzes the walk data and creates a DataFrame containing unique states, their occurrences, and probabilities.
+
+    Args:
+        all_walks (list): A list of lists, where each inner list represents the states visited in a single simulation.
+        n_sims (int): The number of simulations run.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing unique states, their occurrences, and probabilities.
+    """
+    selected_steps = [walk[-1] for walk in all_walks] if only_final_steps else [state for walk in all_walks for state in walk]
+    total_steps = len(selected_steps)  # Total number of steps in all simulations
+    state_counts = {}
+    for state in selected_steps:
+        state_counts[state] = state_counts.get(state, 0) + 1
     state_data = [
             {"State": state, "Occurrences": count, "Probability": count / total_steps}
             for state, count in state_counts.items()
@@ -241,6 +315,8 @@ def analyze_walk_data(all_walks: List[List[int]], grid_size: Tuple[int, int]) ->
     df_state_analysis['State'] = pd.to_numeric(df_state_analysis['State'])
     df_state_analysis = df_state_analysis.sort_values(by='State').reset_index(drop=True)
     df_state_analysis['Coordinates'] = df_state_analysis['State'].apply(lambda x: get_target_coordinate(x, grid_size))
+    df_state_analysis[["X", "Y"]] = df_state_analysis["Coordinates"].str.split(", ", expand=True).astype(int)
+    df_state_analysis = df_state_analysis.sort_values(by=['X', 'Y'], ascending=[True, True])
     return df_state_analysis
 
 
@@ -263,6 +339,30 @@ def compute_theoretical_distribution(states: List[str], transition_matrix: np.nd
     distribution_df['State'] = pd.to_numeric(distribution_df['State'])
     distribution_df['Coordinates'] = distribution_df['State'].apply(lambda x: get_target_coordinate(x, grid_size))
     return distribution_df
+
+
+def bar_plot_1d(data_final: pd.DataFrame) -> str:
+    """
+    Creates a bar plot of occurrences and saves it as a PNG file.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing data for the bar plot.
+
+    Returns:
+        Literal["static/bar_plot.png"]: Path to the saved PNG file.
+    """
+    fig, ax = plt.subplots(figsize=(20,10))
+    sns.barplot(data=data_final, x='State', y='Occurrences', ax=ax)
+    ax.bar_label(ax.containers[0], fontsize=1)
+    ax.set_title("Count of steps on each node")
+    # Save the plot as an in-memory buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    # Encode the image data in base64
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    return image_base64
 
 
 def bar_plot_occurrences(data_final: pd.DataFrame) -> str:
@@ -289,6 +389,73 @@ def bar_plot_occurrences(data_final: pd.DataFrame) -> str:
     return image_base64
 
 
+def bar_plot_combined_x_y_occurrences(data_final: pd.DataFrame) -> str:
+    """
+    Creates a combined bar plot of occurrences for each x and y coordinate in a single figure.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing data for the bar plot.
+
+    Returns:
+        str: Base64-encoded image of the combined plot.
+    """
+    # Sum occurrences by X and Y coordinates
+    x_occurrences = data_final.groupby('X')['Occurrences'].sum().reset_index()
+    y_occurrences = data_final.groupby('Y')['Occurrences'].sum().reset_index()
+    
+    # Create a single figure with two subplots side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    
+    # Plot for X coordinates
+    sns.barplot(data=x_occurrences, x='X', y='Occurrences', ax=ax1)
+    ax1.bar_label(ax1.containers[0], fontsize=8)
+    ax1.set_title("Occurrences by X Coordinate")
+    ax1.set_xlabel("X Coordinate")
+    ax1.set_ylabel("Occurrences")
+    
+    # Plot for Y coordinates
+    sns.barplot(data=y_occurrences, x='Y', y='Occurrences', ax=ax2)
+    ax2.bar_label(ax2.containers[0], fontsize=8)
+    ax2.set_title("Occurrences by Y Coordinate")
+    ax2.set_xlabel("Y Coordinate")
+    ax2.set_ylabel("Occurrences")
+    
+    # Save the combined plot as an in-memory buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    
+    return image_base64
+
+
+def heatmap_1d(data_final: pd.DataFrame) -> str:
+    """
+    Creates a heatmap of occurrences based on coordinates and saves it as a PNG file.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing data for the heatmap.
+
+    Returns:
+        str: Path to the saved heatmap image.
+    """
+
+    ig, ax = plt.subplots(figsize=(20,10))
+    nbins=256
+    k = kde.gaussian_kde([data_final['State'],data_final['Occurrences']])
+    xi, yi = np.mgrid[data_final['State'].min():data_final['State'].max():nbins*1j, data_final['Occurrences'].min():data_final['Occurrences'].max():nbins*1j]
+    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+    plt.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='auto')
+    ax.set_title("Heatmap of the random walk")
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    return image_base64
+
+
 def heatmap_occurrences(data_final: pd.DataFrame) -> str:
     """
     Creates a heatmap of occurrences based on coordinates and saves it as a PNG file.
@@ -299,8 +466,6 @@ def heatmap_occurrences(data_final: pd.DataFrame) -> str:
     Returns:
         str: Path to the saved heatmap image.
     """
-    # Extract X and Y coordinates from the "Coordinates" column
-    data_final[["X", "Y"]] = data_final["Coordinates"].str.split(", ", expand=True)
 
     # Pivot the DataFrame to create a heatmap
     heatmap_data = data_final.pivot(index="Y", columns="X", values="Occurrences")
@@ -311,7 +476,7 @@ def heatmap_occurrences(data_final: pd.DataFrame) -> str:
     plt.title("Heatmap of Occurrences")
     plt.xlabel("X Coordinates")
     plt.ylabel("Y Coordinates")
-    plt.ylim(0, int(heatmap_data.index.max()) + 1)
+    plt.gca().invert_yaxis()
     # Save the plot as an in-memory buffer
     buffer = io.BytesIO()
     plt.savefig(buffer, format='png')
