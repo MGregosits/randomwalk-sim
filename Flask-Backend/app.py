@@ -44,7 +44,7 @@ def process():
 
     # Convert the x and y arrays to lists and return as a JSON object
     result = {'x': x, 'y': y, 'walk': walk, 'grid_x': grid_size[0],
-              'grid_y': grid_size[1], 'hitting_time': hitting_time, 'mixing_time': mixing_time}
+            'grid_y': grid_size[1], 'hitting_time': hitting_time, 'mixing_time': mixing_time}
     return result
 
 
@@ -65,7 +65,8 @@ def multiple_runs():
     df_state_analysis = analyze_walk_data(all_walks, grid_size, only_final_steps=True)
 
     # Create a plots of occurrences
-    bar_plot_base64 = bar_plot_occurrences(df_state_analysis)
+    #bar_plot_base64 = bar_plot_occurrences(df_state_analysis)
+    bar_plot_base64 = bar_plot_combined_x_y_occurrences(df_state_analysis)
     heatmap_base64 = heatmap_occurrences(df_state_analysis)
 
     result = {"bar_plot": bar_plot_base64, "heat_map": heatmap_base64}
@@ -103,7 +104,8 @@ def quantum_2d():
 
     data_final = convert_2d_results_to_coordinates(final, number_qubits, sample_number)
 
-    barplot_base64 = bar_quantum_2d(data_final)
+    #barplot_base64 = bar_quantum_2d(data_final)
+    barplot_base64 = combined_bar_plot_quantum_2d(data_final)
 
     heatmap_base64 = heatmap_quantum_2d(data_final)
 

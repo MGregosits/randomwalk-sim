@@ -389,6 +389,47 @@ def bar_plot_occurrences(data_final: pd.DataFrame) -> str:
     return image_base64
 
 
+def bar_plot_combined_x_y_occurrences(data_final: pd.DataFrame) -> str:
+    """
+    Creates a combined bar plot of occurrences for each x and y coordinate in a single figure.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing data for the bar plot.
+
+    Returns:
+        str: Base64-encoded image of the combined plot.
+    """
+    # Sum occurrences by X and Y coordinates
+    x_occurrences = data_final.groupby('X')['Occurrences'].sum().reset_index()
+    y_occurrences = data_final.groupby('Y')['Occurrences'].sum().reset_index()
+    
+    # Create a single figure with two subplots side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    
+    # Plot for X coordinates
+    sns.barplot(data=x_occurrences, x='X', y='Occurrences', ax=ax1)
+    ax1.bar_label(ax1.containers[0], fontsize=8)
+    ax1.set_title("Occurrences by X Coordinate")
+    ax1.set_xlabel("X Coordinate")
+    ax1.set_ylabel("Occurrences")
+    
+    # Plot for Y coordinates
+    sns.barplot(data=y_occurrences, x='Y', y='Occurrences', ax=ax2)
+    ax2.bar_label(ax2.containers[0], fontsize=8)
+    ax2.set_title("Occurrences by Y Coordinate")
+    ax2.set_xlabel("Y Coordinate")
+    ax2.set_ylabel("Occurrences")
+    
+    # Save the combined plot as an in-memory buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    
+    return image_base64
+
+
 def heatmap_1d(data_final: pd.DataFrame) -> str:
     """
     Creates a heatmap of occurrences based on coordinates and saves it as a PNG file.

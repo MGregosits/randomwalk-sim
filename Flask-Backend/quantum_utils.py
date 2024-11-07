@@ -202,6 +202,17 @@ def run_2d_walk(n, steps, sample_number):
     
 
 def convert_2d_results_to_coordinates(final, n, sample_number):
+    """
+    Converts the final results into x and y coordinates along with their occurrences and probabilities.
+
+    Args:
+        final (dict): Dictionary with state as keys and counts as values.
+        n (int): Number of qubits per coordinate.
+        sample_number (int): Total number of samples to calculate probabilities.
+
+    Returns:
+        pd.DataFrame: DataFrame with X Coordinate, Y Coordinate, Occurrences, Probabilities, and combined Coordinates.
+    """
     x_coords = []
     y_coords = []
     occurrences = []
@@ -258,6 +269,47 @@ def bar_quantum_2d(data_final: pd.DataFrame) -> str:
     plt.close()
     return image_base64
     #plt.show()
+
+
+def combined_bar_plot_quantum_2d(data_final: pd.DataFrame) -> str:
+    """
+    Creates a combined bar plot showing occurrences of each x and y coordinate in a single figure.
+
+    Args:
+        data_final (pd.DataFrame): DataFrame containing X Coordinate, Y Coordinate, and Occurrences.
+
+    Returns:
+        str: Base64-encoded image of the combined plot.
+    """
+    # Aggregate occurrences by X and Y coordinates
+    x_occurrences = data_final.groupby('X Coordinate')['Occurrences'].sum().reset_index()
+    y_occurrences = data_final.groupby('Y Coordinate')['Occurrences'].sum().reset_index()
+
+    # Create a single figure with two subplots side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    
+    # Plot for X coordinates
+    sns.barplot(data=x_occurrences, x='X Coordinate', y='Occurrences', ax=ax1)
+    ax1.bar_label(ax1.containers[0], fontsize=8)
+    ax1.set_title("Occurrences by X Coordinate")
+    ax1.set_xlabel("X Coordinate")
+    ax1.set_ylabel("Occurrences")
+    
+    # Plot for Y coordinates
+    sns.barplot(data=y_occurrences, x='Y Coordinate', y='Occurrences', ax=ax2)
+    ax2.bar_label(ax2.containers[0], fontsize=8)
+    ax2.set_title("Occurrences by Y Coordinate")
+    ax2.set_xlabel("Y Coordinate")
+    ax2.set_ylabel("Occurrences")
+    
+    # Save the combined plot as an in-memory buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    plt.close()
+    
+    return image_base64
 
 def heatmap_quantum_2d(data_final: pd.DataFrame) -> str:
     """
