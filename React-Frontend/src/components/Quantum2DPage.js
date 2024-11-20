@@ -3,6 +3,7 @@ import axios from "axios";
 import BarPlot from "./BarPlot";
 import Heatmap from "./Heatmap";
 import HeatmapGif from "./HeatmapGif";
+import Footer from "./Footer";
 
 function Quantum2DPage() {
     const [number_qubits, setNumberQubits] = useState('');
@@ -34,13 +35,21 @@ function Quantum2DPage() {
     return(
         <div>
           <h2>Quantum 2D Simulation</h2>
+          <div className="input-container">
           <p>Enter the n parameter (n x n grid):</p>
           <input type="number" value={number_qubits} onChange={e => setNumberQubits(e.target.value)} />
+          </div>
+          <div className="input-container">
           <p>Enter the iterator value (iterator):</p>
           <input type="number" value={iterator} onChange={e => setIterator(e.target.value)} />
+          </div>
+          <div className="input-container">
           <p>Enter the sample number (sample_number):</p>
           <input type="number" value={sample_number} onChange={e => setSampleNumber(e.target.value)} />
+          </div>
+          <div className="button-container">
           <button onClick={runQuantumSimulation}>Run Simulations</button>
+          </div>
           {isLoading ? (
             <p>Loading Bar Plot...</p>
           ) : barPlot ? (
@@ -56,6 +65,7 @@ function Quantum2DPage() {
           ) : heatMapGif ? (
             <HeatmapGif key={heatMapGif} heatmapgif={heatMapGif} />
           ) : null}
+          <Footer />
         </div>
         );}
 

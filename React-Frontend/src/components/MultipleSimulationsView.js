@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import axios from "axios";
 import BarPlot from "./BarPlot";
 import Heatmap from "./Heatmap";
+import Footer from "./Footer";
 
 function MultipleSimulationsView({gridX, gridY, targetX, targetY}){
     const [n, setN] = useState('');
@@ -33,11 +34,17 @@ function MultipleSimulationsView({gridX, gridY, targetX, targetY}){
     return(
     <div>
       <h2>Multiple Simulations and Visualization</h2>
+      <div className="input-container">
       <p>Enter the number of steps (n):</p>
       <input type="number" value={n} onChange={e => setN(e.target.value)} />
+      </div>
+      <div className="input-container">
       <p>Enter the number of number of simulations (n_sims):</p>
       <input type="number" value={nSims} onChange={e => setNSims(e.target.value)} />
+      </div>
+      <div className="button-container">
       <button onClick={runMultipleSimulations}>Run Simulations</button>
+      </div>
       {isLoading ? (
         <p>Loading Bar Plot...</p>
       ) : barPlot ? (
@@ -48,6 +55,7 @@ function MultipleSimulationsView({gridX, gridY, targetX, targetY}){
       ) : heatmap ? (
         <Heatmap key={heatmap} heatmap={heatmap} />
       ) : null}
+      <Footer />
     </div>
     );
 }

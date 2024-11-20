@@ -17,9 +17,22 @@ body {
   padding: 20px;
 }
 
+h2 {
+  text-align: center;
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.input-container { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
 }
 
 input[type="number"] {
@@ -29,7 +42,13 @@ input[type="number"] {
   color: #ffffff;
   padding: 10px;
   margin: 10px 0;
-  width: 100%;
+  width: 60%;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 button {
@@ -40,7 +59,7 @@ button {
   cursor: pointer;
   padding: 10px;
   margin: 10px 0;
-  width: 100%;
+  width: 60%;
 }
 
 button:hover {
@@ -49,4 +68,14 @@ button:hover {
 
 p {
   margin: 10px 0;
+}
+
+#hitting_time {
+  text-align: center;
+  font-weight: bold;
+}
+
+#mixing_time {
+  text-align: center;
+  font-weight: bold;
 }
