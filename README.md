@@ -41,6 +41,14 @@ Before you begin, ensure you have the following installed:
    git clone https://github.com/MGregosits/randomwalk-sim.git
    cd randomwalk-sim
 
-2. Install python dependencies:
+2. Install Python dependencies:
    ```bash
    pip install .
+
+3. Install Node dependencies:
+   ```bash
+   npm install .
+4. Run the server and the client:
+   ```bash
+   flask run
+   npm start
