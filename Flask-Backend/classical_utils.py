@@ -118,8 +118,8 @@ def walk_step_by_step_1d(
     n_states: int,
     states: List[str]
 ) -> List[str]:
-
-    walk = ['0']
+    middle_point = n_states // 2
+    walk = [str(middle_point)]
     for i in range(0, n):
         current_state = walk[-1]
         next_state = mc.next(current_state)

@@ -20,6 +20,9 @@ function App() {
             break;
         case '/quantum_2d':
             component = <Quantum2DPage />;
+            break;
+        default:
+            component = <ClassicalPage />;
     }
 
     return (

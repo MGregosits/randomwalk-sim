@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import axios from "axios";
 import BarPlot from "./BarPlot";
 import Heatmap from "./Heatmap";
+import Footer from "./Footer";
 
 function Classical1D(){
     const [n, setN] = useState('');
@@ -30,14 +31,22 @@ function Classical1D(){
     
     return(
     <div>
-      <h2>Multiple Simulations and Visualization</h2>
+      <h2>Classical 1D Simulation</h2>
+      <div className="input-container">
       <p>Enter the number of states (n_states):</p>
       <input type="number" value={nStates} onChange={e => setNStates(e.target.value)} />
+      </div>
+      <div className="input-container">
       <p>Enter the number of steps (n):</p>
       <input type="number" value={n} onChange={e => setN(e.target.value)} />
+      </div>
+      <div className="input-container">
       <p>Enter the number of number of simulations (n_sims):</p>
       <input type="number" value={nSims} onChange={e => setNSims(e.target.value)} />
+      </div>
+      <div className="button-container">
       <button onClick={runMultipleSimulations}>Run Simulations</button>
+      </div>
       {isLoading ? (
         <p>Loading Bar Plot...</p>
       ) : barPlot ? (
@@ -48,6 +57,7 @@ function Classical1D(){
       ) : heatmap ? (
         <Heatmap key={heatmap} heatmap={heatmap} />
       ) : null}
+      <Footer />
     </div>
     );
 }

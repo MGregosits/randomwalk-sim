@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import axios from "axios";
 import BarPlot from "./BarPlot";
 import Heatmap from "./Heatmap";
+import Footer from "./Footer";
 
 function QuantumPage() {
     const [number_qubits, setNumberQubits] = useState('');
@@ -30,14 +31,22 @@ function QuantumPage() {
 
     return(
         <div>
-          <h2>Quantum Simulation</h2>
+          <h2>Quantum 1D Simulation</h2>
+          <div className="input-container">
           <p>Enter the number of qubits (number_qubits):</p>
           <input type="number" value={number_qubits} onChange={e => setNumberQubits(e.target.value)} />
+          </div>
+          <div className="input-container">
           <p>Enter the iterator value (iterator):</p>
           <input type="number" value={iterator} onChange={e => setIterator(e.target.value)} />
+          </div>
+          <div className="input-container">
           <p>Enter the sample number (sample_number):</p>
           <input type="number" value={sample_number} onChange={e => setSampleNumber(e.target.value)} />
+          </div>
+          <div className="button-container">
           <button onClick={runQuantumSimulation}>Run Simulations</button>
+          </div>
           {isLoading ? (
             <p>Loading Bar Plot...</p>
           ) : barPlot ? (
@@ -48,6 +57,7 @@ function QuantumPage() {
           ) : heatMap ? (
             <Heatmap key={heatMap} heatmap={heatMap} />
           ) : null}
+          <Footer />
         </div>
         );}
 

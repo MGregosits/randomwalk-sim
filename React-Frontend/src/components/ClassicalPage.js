@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Network from './Network';
 import MultipleSimulationsView from './MultipleSimulationsView';
+import Footer from './Footer';
 import '../index.css';
 
 function ClassicalPage() {
@@ -37,15 +38,24 @@ function ClassicalPage() {
 
     return (
         <div>
+            <h2>Classical 2D Simulation</h2>
+            <div className="input-container">
             <p>Enter the size of the grid (x, y):</p>
             <input type="number" value={gridX} onChange={e => setGridX(e.target.value)} />
             <input type="number" value={gridY} onChange={e => setGridY(e.target.value)} />
+            </div>
+            <div className="input-container">
             <p>Choose the number of the steps!</p>
             <input type="number" value={n} onChange={e => setN(e.target.value)} />
+            </div>
+            <div className="input-container">
             <p>Enter the desired state (x, y):</p>
             <input type="number" value={targetX} onChange={e => setTargetX(e.target.value)} />
             <input type="number" value={targetY} onChange={e => setTargetY(e.target.value)} />
+            </div>
+            <div className='button-container'>
             <button onClick={sendData}>Send Data</button>
+            </div>
             <div id="canvas-container">
                 <div id="canvas" />
             </div>
@@ -66,6 +76,7 @@ function ClassicalPage() {
                     />
                 )}
             </div>
+            <Footer />
         </div>
 
     );
