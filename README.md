@@ -11,9 +11,6 @@ Welcome to the Random Walk Simulation project! This application simulates classi
   - [Installation](#installation)
   - [Running the Application](#running-the-application)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
 
 ## Introduction
 This project is designed to simulate random walks, a mathematical concept that describes a path consisting of a succession of random steps. The project is capable of simulating both classical and quantum random walks. It uses a Flask backend to handle the simulations and a React JS frontend to display the results.
@@ -48,7 +45,17 @@ Before you begin, ensure you have the following installed:
 3. Install Node dependencies:
    ```bash
    npm install .
-4. Run the server and the client:
+
+### Running the application
+1. Run the Flask backend:
    ```bash
    flask run
-   npm start
+
+2. Run the React frontend:
+   ```bash
+   npm run
+
+3. Open your browser and navigate to http://localhost:3000 to view the application.
+
+### Usage
+Once the application is running, you can configure the parameters of the random walk simulation through the web interface and visualize the results.
