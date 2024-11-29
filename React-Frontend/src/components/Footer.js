@@ -1,4 +1,5 @@
 import React from 'react';
+import './Footer.css';
 
 const Footer = () => {
   return (
@@ -12,8 +13,6 @@ const Footer = () => {
 const footerStyle = {
   textAlign: 'center',
   padding: '10px',
-  backgroundColor: '#282c34',
-  color: 'white',
   position: 'fixed',
   bottom: '0',
   width: '100%'

@@ -1,5 +1,6 @@
 import React from 'react';
 import './NavBar.css';
+import ThemeToggle from './ThemeToggle';
 
 function NavBar() {
     return <nav className="nav">
@@ -10,6 +11,7 @@ function NavBar() {
             <CustomLink href="/quantum">Quantum Simulation</CustomLink>
             <CustomLink href="/quantum_2d">Quantum 2D Simulation</CustomLink>
         </ul>
+        <ThemeToggle />
     </nav>
 }
 
