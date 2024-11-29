@@ -7,13 +7,22 @@ body {
 }
 
 .nav {
-    background-color: #282c34;
-    color: white;
+    
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
     padding: 0 1rem;
+}
+
+.nav.dark {
+    background-color: #282c34;
+    color: white;
+}
+
+.nav.light {
+    background-color: #f5f5f5;
+    color: #333333;
 }
 
 .site-title {
@@ -45,3 +54,17 @@ body {
     background-color: #50fa7b;
     color: #282c34;
 }
+
+.theme-toggle {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 10%;
+}
+
+.theme-toggle:hover {
+    opacity: 0.9;
+  }
