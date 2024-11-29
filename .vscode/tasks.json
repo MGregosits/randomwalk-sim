@@ -1,0 +1,31 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run Flask Backend",
+        "type": "shell",
+        "command": "flask run",
+        "options": {
+          "cwd": "${workspaceFolder}/Flask-Backend"
+        },
+        "problemMatcher": [],
+        "isBackground": true
+      },
+      {
+        "label": "Run React Frontend",
+        "type": "shell",
+        "command": "npm start",
+        "options": {
+          "cwd": "${workspaceFolder}/React-Frontend"
+        },
+        "problemMatcher": [],
+        "isBackground": true
+      },
+      {
+        "label": "Run Both",
+        "dependsOn": ["Run Flask Backend", "Run React Frontend"],
+        "problemMatcher": []
+      }
+    ]
+  }
+  
